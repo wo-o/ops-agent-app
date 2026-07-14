@@ -92,10 +92,10 @@ class H(http.server.BaseHTTPRequestHandler):
             with db() as c, c.cursor() as cur:
                 cur.execute("SELECT count(*) FROM items")
                 n = cur.fetchone()[0]
-            return self._send(200, "A-service OK — items=%d, db=connected" % n)
+            return self._send(200, "app OK — items=%d, db=connected" % n)
         except Exception as e:
             logging.error("root db check failed: %s", e)
-            return self._send(200, "A-service OK — db=UNREACHABLE")
+            return self._send(200, "app OK — db=UNREACHABLE")
 
     def do_POST(self):
         if self.path.startswith("/items"):
