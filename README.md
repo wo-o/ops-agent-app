@@ -5,14 +5,14 @@
 정의(`*.tf`)와 애플리케이션 코드를 분리하기 위해 별도 리포로 뺐다.
 
 시크릿이 전혀 없어 퍼블릭으로 공개해도 안전하다 — DB 접속 정보는 이 리포가
-아니라 인프라(Terraform user_data)가 호스트에 써주는 `/opt/aservice/env`에서만 온다.
+아니라 인프라(Terraform user_data)가 호스트에 써주는 `/opt/app/env`에서만 온다.
 
 ## 구성
 
 | 파일 | 역할 |
 | --- | --- |
 | `app.py` | RDS(PostgreSQL)를 쓰는 가벼운 stdlib HTTP API. `:8080`에서 뜬다. |
-| `aservice.service` | systemd unit. `/opt/aservice/env`를 EnvironmentFile로 읽는다. |
+| `app.service` | systemd unit. `/opt/app/env`를 EnvironmentFile로 읽는다. |
 | `install.sh` | 의존성 설치 + `app.py`·unit 배치 + `systemctl enable --now`. |
 
 ## 엔드포인트
@@ -25,14 +25,14 @@
 | `POST /items` | items INSERT (body=name) |
 | `GET /troublemaker` | 사전 장애: DB 커넥션 누수 + CPU 소모 + ERROR 로그 → 500 |
 
-로그: `/var/log/aservice/app.log` (promtail이 있으면 `job=aservice`).
+로그: `/var/log/app/app.log` (promtail이 있으면 `job=app`).
 
 ## 배포 (인프라 리포와의 계약)
 
 EC2 부팅 시 `ops-agent-iac`의 `app.tf` user_data가:
 
 1. `git`을 설치하고
-2. 시크릿 env 파일 `/opt/aservice/env`를 작성한 뒤 (DB_HOST·비번은 Terraform만 아는 값)
+2. 시크릿 env 파일 `/opt/app/env`를 작성한 뒤 (DB_HOST·비번은 Terraform만 아는 값)
 3. 이 리포를 **태그에 pin**해서 clone하고
 4. `install.sh`를 실행한다.
 

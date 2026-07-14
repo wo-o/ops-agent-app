@@ -8,7 +8,7 @@ import time
 import psycopg2
 
 logging.basicConfig(
-    filename="/var/log/aservice/app.log",
+    filename="/var/log/app/app.log",
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
 )
