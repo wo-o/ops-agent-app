@@ -1,0 +1,14 @@
+[Unit]
+Description=A-service demo app
+After=network.target
+
+[Service]
+# Secrets (DB_HOST/DB_PASSWORD) live only in this env file, which is written
+# by the infrastructure (Terraform user_data) — never by this repo.
+EnvironmentFile=/opt/aservice/env
+ExecStart=/usr/bin/python3 /opt/aservice/app.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
