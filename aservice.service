@@ -1,6 +1,7 @@
 [Unit]
 Description=A-service demo app
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 # Secrets (DB_HOST/DB_PASSWORD) live only in this env file, which is written
@@ -8,7 +9,16 @@ After=network.target
 EnvironmentFile=/opt/aservice/env
 ExecStart=/usr/bin/python3 /opt/aservice/app.py
 Restart=always
+RestartSec=2
+
+# Blast-radius hardening. Kept as root to match the course setup, but the
+# service still runs sandboxed: read-only system dirs, private /tmp, no new
+# privileges. /var/log/aservice stays writable for the app log.
 User=root
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target
