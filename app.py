@@ -4,6 +4,7 @@ import logging
 import os
 import socketserver
 import time
+import urllib.parse
 
 import psycopg2
 
@@ -21,6 +22,7 @@ CFG = dict(
     connect_timeout=5,
 )
 _leaks = []  # /troublemaker가 닫지 않고 쌓는 커넥션(누수)
+_ballast = []  # /leak가 쌓는 메모리 ballast — 프로세스 재시작으로만 해제
 
 
 def db():
@@ -73,6 +75,21 @@ class H(http.server.BaseHTTPRequestHandler):
             except Exception as e:
                 logging.error("troublemaker db error: %s", e)
                 return self._send(500, "internal error")
+        if self.path.startswith("/leak"):
+            # 사전 장애: 프로세스 메모리 잠식 — rolling-restart가 재시작하면 해제된다.
+            # ERROR를 남기지 않아 5xx 알람과 간섭하지 않는다(memory 알람 전용 주입).
+            q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            try:
+                mb = int(q.get("mb", ["100"])[0])
+            except ValueError:
+                return self._send(400, "bad mb")
+            mb = max(1, min(mb, 500))
+            b = bytearray(mb << 20)
+            b[::4096] = b"\x01" * (len(b) // 4096)  # 페이지 커밋 강제(lazy alloc 방지)
+            _ballast.append(b)
+            total = sum(len(x) for x in _ballast) >> 20
+            logging.info("leak ballast added: +%dMB, total %dMB", mb, total)
+            return self._send(200, "ballast %dMB held (restart frees it)" % total)
         if self.path.startswith("/items"):
             try:
                 with db() as c, c.cursor() as cur:

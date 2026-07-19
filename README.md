@@ -24,6 +24,7 @@
 | `GET /items` | items SELECT (JSON) |
 | `POST /items` | items INSERT (body=name) |
 | `GET /troublemaker` | 사전 장애: DB 커넥션 누수 + CPU 소모 + ERROR 로그 → 500 |
+| `GET /leak?mb=N` | 사전 장애: 프로세스 메모리 ballast +N MB (1..500, 기본 100) → 200. 재시작으로만 해제 — memory 알람 주입용 |
 
 로그: `/var/log/app/app.log` (promtail이 있으면 `job=app`).
 
