@@ -1,0 +1,8 @@
+# This repo intentionally holds no secrets. Guard against accidental commits.
+env
+*.env
+.env
+*.pem
+*.key
+__pycache__/
+*.pyc

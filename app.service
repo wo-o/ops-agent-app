@@ -1,0 +1,24 @@
+[Unit]
+Description=app demo service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Secrets (DB_HOST/DB_PASSWORD) live only in this env file, which is written
+# by the infrastructure (Terraform user_data) — never by this repo.
+EnvironmentFile=/opt/app/env
+ExecStart=/usr/bin/python3 /opt/app/app.py
+Restart=always
+RestartSec=2
+
+# Blast-radius hardening. Kept as root to match the course setup, but the
+# service still runs sandboxed: read-only system dirs, private /tmp, no new
+# privileges. /var/log/app stays writable for the app log.
+User=root
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
