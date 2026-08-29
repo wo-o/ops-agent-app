@@ -60,21 +60,8 @@ class H(http.server.BaseHTTPRequestHandler):
         if self.path.startswith("/healthz"):
             return self._send(200, "ok")
         if self.path.startswith("/troublemaker"):
-            # 사전 장애: 커넥션 누수 + CPU 태우기 + ERROR 로그 → 500
-            try:
-                for _ in range(20):
-                    _leaks.append(db())  # 닫지 않음 → 커넥션 증가
-                end = time.time() + 8
-                while time.time() < end:  # CPU 태우기
-                    _ = sum(i * i for i in range(10000))
-                logging.error(
-                    "troublemaker triggered: leaked %d db connections + burned cpu",
-                    len(_leaks),
-                )
-                return self._send(500, "internal error: resource exhaustion")
-            except Exception as e:
-                logging.error("troublemaker db error: %s", e)
-                return self._send(500, "internal error")
+            logging.info("troublemaker endpoint disabled")
+            return self._send(200, "troublemaker disabled")
         if self.path.startswith("/leak"):
             # 사전 장애: 프로세스 메모리 잠식 — rolling-restart가 재시작하면 해제된다.
             # ERROR를 남기지 않아 5xx 알람과 간섭하지 않는다(memory 알람 전용 주입).
